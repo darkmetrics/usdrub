@@ -39,6 +39,7 @@ def get_fx(ticker: str,
     торгов: http://iss.moex.com/iss/index.json
     """
 
+    print(f'Скачиваю данные с ММВБ для {ticker}...')
     colstring = ','.join(columns)
     data = []
     start = 0
@@ -47,16 +48,13 @@ def get_fx(ticker: str,
                  f'boardgroups/{boargroups}/securities/{ticker}.{format}?'
                  f'from={start_date}&till={end_date}&start={start}&history.columns={colstring}')
 
-        print(query)
         resp = requests.get(query)
         resp = json.loads(resp.text)
-        print(resp)
         data += resp['history']['data']
         # в ответе есть специальный курсор, он показывает, сколько наблюдений
         # всего вернет запрос и сколько мы уже получили
         cursor = dict(zip(resp['history.cursor']['columns'],
                           resp['history.cursor']['data'][0]))
-        print(cursor)
         # сравним полученное число наблюдений с максимальным
         if cursor['TOTAL'] < cursor['INDEX'] + cursor['PAGESIZE']:
             return {'columns': columns, 'values': data}
