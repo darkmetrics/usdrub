@@ -6,6 +6,15 @@ from params import usdrub_tod, usdrub_tom, start_date, fx_columns
 current_date = datetime.now()
 
 
+def flatten(keys: list,
+            values: list) -> list:
+    """
+    Возвращает массив, развернутый в список словарей, где
+    ключи - имена столбцов, значения - данные из списка списков
+    """
+    return [{k: v[i] for i, k in enumerate(keys)} for v in values]
+
+
 # функция для загрузки котировок валютных курсов с ММВБ
 def get_fx(ticker: str,
            start_date: str,
@@ -48,16 +57,16 @@ def get_fx(ticker: str,
                  f'boardgroups/{boargroups}/securities/{ticker}.{format}?'
                  f'from={start_date}&till={end_date}&start={start}&history.columns={colstring}')
 
-        resp = requests.get(query)
-        resp = json.loads(resp.text)
-        data += resp['history']['data']
+        r = requests.get(query)
+        r = json.loads(r.text)
+        data += r['history']['data']
         # в ответе есть специальный курсор, он показывает, сколько наблюдений
         # всего вернет запрос и сколько мы уже получили
-        cursor = dict(zip(resp['history.cursor']['columns'],
-                          resp['history.cursor']['data'][0]))
+        cursor = dict(zip(r['history.cursor']['columns'],
+                          r['history.cursor']['data'][0]))
         # сравним полученное число наблюдений с максимальным
         if cursor['TOTAL'] < cursor['INDEX'] + cursor['PAGESIZE']:
-            return {'columns': columns, 'values': data}
+            return flatten(keys=r['history']['columns'], values=data)
         # максимальное количество наблюдений за 1 запрос к API=100
         start += 100
 
