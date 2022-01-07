@@ -3,46 +3,12 @@ from sqlalchemy.orm import sessionmaker
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy_utils import database_exists, create_database
 
+from schema import Base
+
 import pandas as pd
 import psycopg2
 
 from params import psql_user, psql_pass
-
-Base = declarative_base()
-
-
-# создадим схему табличек для базы данных
-
-class Quotes(Base):
-    __tablename__ = 'quotes'
-    """табличка для хранения котировок"""
-    # первичный ключ - дата
-    date = Column(Date, primary_key=True)
-    # валюты
-    usdrub_tod = Column(Float)
-    usdrub_tom = Column(Float)
-    eurusd = Column(Float)
-    # доходности государственных облигаций
-    ust10 = Column(Float)
-    ger10 = Column(Float)
-    ofz10 = Column(Float)
-    ust5 = Column(Float)
-    ger5 = Column(Float)
-    ofz5 = Column(Float)
-    # сырье
-    brent = Column(Float)
-    urals = Column(Float)
-    gold = Column(Float)
-    gas = Column(Float)
-
-
-class Volume(Base):
-    __tablename__ = 'volume'
-    """табличка для хранения объемов"""
-    date = Column(Date, primary_key=True)
-    usdrub_tod = Column(BigInteger)
-    usdrub_tom = Column(BigInteger)
-
 
 # сам класс для работы с БД
 
@@ -83,8 +49,13 @@ class Db:
 
     def __exit__(self, exception_type, exception_val, trace):
         """Предназначен для закрытия всех соединений в БД"""
-        self.session.close()
-        self.engine.dispose()
+        try:
+            self.session.close()
+        # если соединение не устанавливалось, то и сессии нет
+        except AttributeError as e:
+            pass
+        finally:
+            self.engine.dispose()
 
     def drop(self):
         """Удаляет БД, если она уже существует"""
@@ -96,5 +67,4 @@ class Db:
 
 
 with Db('somename', psql_user, psql_pass, base=Base) as db:
-    print('123')
     pass
