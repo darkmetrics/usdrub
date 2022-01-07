@@ -1,14 +1,12 @@
-from sqlalchemy import create_engine, MetaData, Table, Column, BigInteger, Date, Float
+import os
+
+from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy_utils import database_exists, create_database
 
 from schema import Base
+from params import db_name
 
-import pandas as pd
-import psycopg2
-
-from params import psql_user, psql_pass
 
 # сам класс для работы с БД
 
@@ -31,16 +29,14 @@ class Db:
     def __enter__(self):
         """Подключение к БД через контекстный менеджер"""
         self.engine = create_engine(self.conn_string)
-        # если БД существует, подключимся
-        if database_exists(self.engine.url):
-            print('database already exists')
-            Session = sessionmaker(bind=self.engine)
-            session = Session()
-            self.session = session
-        # иначе создадим, прогрузив схему
-        else:
-            print('creating database...')
+        # если БД не существует, создадим, прогрузив схему
+        if not database_exists(self.engine.url):
+            print('База данных не существует, создаю ее по схеме из schema.py...')
             self.create()
+        # подключимся
+        Session = sessionmaker(bind=self.engine)
+        session = Session()
+        self.session = session
 
     def create(self):
         """Создает БД на основе схемы"""
@@ -65,6 +61,9 @@ class Db:
         """Возвращает таблицу из БД в формате Pandas DataFrame"""
         pass
 
+# получим логин и пароль для PostgreSQL из переменных окружения Windows
+psql_user = os.environ.get('psql_user')
+psql_pass = os.environ.get('psql_password')
 
-with Db('somename', psql_user, psql_pass, base=Base) as db:
+with Db(db_name, psql_user, psql_pass, base=Base) as db:
     pass
