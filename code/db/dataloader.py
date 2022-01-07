@@ -1,3 +1,4 @@
+import pandas as pd
 import requests
 import json
 from datetime import datetime, date
@@ -22,7 +23,7 @@ def get_fx(ticker: str,
            columns: list,
            boargroups: int = 13,
            format: str = 'json'
-           ) -> dict:
+           ) -> pd.DataFrame:
     """
     Скачивает историю котировок валютных курсов по IMOEX API.
     
@@ -50,6 +51,7 @@ def get_fx(ticker: str,
 
     print(f'Скачиваю данные с ММВБ для {ticker}...')
     colstring = ','.join(columns)
+    short_name = f'{ticker[:3]}RUB{ticker[-3:]}'
     data = []
     start = 0
     while True:
@@ -66,7 +68,21 @@ def get_fx(ticker: str,
                           r['history.cursor']['data'][0]))
         # сравним полученное число наблюдений с максимальным
         if cursor['TOTAL'] < cursor['INDEX'] + cursor['PAGESIZE']:
-            return flatten(keys=r['history']['columns'], values=data)
+
+            data = flatten(keys=r['history']['columns'], values=data)
+
+            # переделаем в Pandas DataFrame
+            df = pd.DataFrame(data)
+            df.columns = ['date', f'{short_name}', 'volume']
+            # преобразуем строковые даты в datetime и оставим только дату
+            df['date'] = pd.to_datetime(df['date'])
+            df['date'] = df['date'].dt.date
+            df.index = df['date']
+            df.drop(columns='date', inplace=True)
+            # посчитаем объем в долларах
+            df['volume'] = df['volume'].div(df[f'{short_name}'])
+            return df
+
         # максимальное количество наблюдений за 1 запрос к API=100
         start += 100
 
