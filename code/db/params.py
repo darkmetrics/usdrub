@@ -4,6 +4,8 @@ import os
 # получим логин и пароль для PostgreSQL из переменных окружения Windows
 PSQL_USER = os.environ.get('PSQL_USER')
 PSQL_PASSWORD = os.environ.get('PSQL_PASSWORD')
+# получение ключа API для Eikon
+# ВАЖНО: этот ключ связан с аккаунтом ВШЭ, логин аккаунта: student3@hse.ru
 EIKON_API_KEY = os.environ.get('EIKON_API_KEY')
 
 db_name = 'daily'
