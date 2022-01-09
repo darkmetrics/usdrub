@@ -1,8 +1,11 @@
-import pandas as pd
-import requests
 import json
-from datetime import datetime, date
-from params import usdrub_tod, usdrub_tom, start_date, fx_columns
+import requests
+import pandas as pd
+import refinitiv.dataplatform.eikon as ek
+from datetime import datetime
+from functools import reduce
+# from params import usdrub_tod, usdrub_tom, start_date
+
 
 current_date = datetime.now()
 
@@ -68,7 +71,6 @@ def get_fx(ticker: str,
                           r['history.cursor']['data'][0]))
         # сравним полученное число наблюдений с максимальным
         if cursor['TOTAL'] < cursor['INDEX'] + cursor['PAGESIZE']:
-
             data = flatten(keys=r['history']['columns'], values=data)
 
             # переделаем в Pandas DataFrame
@@ -87,8 +89,54 @@ def get_fx(ticker: str,
         start += 100
 
 
-out = get_fx(ticker=usdrub_tom,
-             start_date=start_date,
-             end_date=current_date.strftime("%Y-%m-%d"),
-             columns=fx_columns)
-print(out)
+def get_eikon_data(rics: list,
+                   start_date: str,
+                   end_date: str,
+                   colname: str = 'CLOSE') -> pd.DataFrame:
+    """
+    Выкачивает данные из Thomson Reuters Eikon по списку тикеров.
+    Возвращает pandas DataFrame с заданным столбцом для каждого тикера и датами.
+
+    :param rics:
+    :param start_date:
+    :param end_date:
+    :param colname:
+    :return:
+    """
+    # получим данные циклом, потом переписать на асинхоронный вариант
+    dfs = []
+    for ric in rics:
+        # не забыть переименовать столбцы и выбрать close
+        df = ek.get_timeseries(rics=ric,
+                               start_date=start_date,
+                               end_date=end_date)
+        # df['date'] = df.index
+        # df.index = df['date'].dt.date
+        # df.drop(columns='date', inplace=True)
+        dfs.append(df[colname])
+
+    data = reduce(lambda x, y: pd.merge(x, y,
+                                        how='outer',
+                                        left_index=True,
+                                        right_index=True),
+                  dfs)
+
+    data['date'] = data.index
+    data.index = data['date'].dt.date
+    data.drop(columns='date', inplace=True)
+    return data
+
+
+if __name__ == '__main__':
+    # out = get_fx(ticker=usdrub_tom,
+    #              start_date=start_date,
+    #              end_date=current_date.strftime("%Y-%m-%d"),
+    #              columns=fx_columns)
+    # print(out)
+    # from params import rics
+
+    # out = get_eikon_data(rics=rics,
+    #                      start_date=start_date,
+    #                      end_date=current_date.strftime("%Y-%m-%d"),
+    #                      colname=ek_colname)
+    pass

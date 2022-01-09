@@ -1,12 +1,9 @@
-import os
-
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy_utils import database_exists, create_database
 
 from schema import Base
-from params import db_name
-
+from params import db_name, PSQL_USER, PSQL_PASSWORD
 
 # сам класс для работы с БД
 
@@ -61,9 +58,6 @@ class Db:
         """Возвращает таблицу из БД в формате Pandas DataFrame"""
         pass
 
-# получим логин и пароль для PostgreSQL из переменных окружения Windows
-psql_user = os.environ.get('psql_user')
-psql_pass = os.environ.get('psql_password')
 
-with Db(db_name, psql_user, psql_pass, base=Base) as db:
+with Db(db_name, PSQL_USER, PSQL_PASSWORD, base=Base) as db:
     pass
