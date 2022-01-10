@@ -5,9 +5,9 @@ Base = declarative_base()
 
 # создадим схему табличек для базы данных
 
-class Quotes(Base):
-    __tablename__ = 'quotes'
-    """табличка для хранения котировок"""
+class Daily(Base):
+    __tablename__ = 'daily'
+    """табличка для хранения дневных котировок"""
     # первичный ключ - дата
     date = Column(Date, primary_key=True)
     # валюты
@@ -23,13 +23,13 @@ class Quotes(Base):
     ofz5 = Column(Float)
     # сырье
     brent = Column(Float)
-    urals = Column(Float)
+    # urals = Column(Float)
     gold = Column(Float)
     gas = Column(Float)
 
 
 class Volume(Base):
-    __tablename__ = 'volume'
+    __tablename__ = 'volumes'
     """табличка для хранения объемов"""
     date = Column(Date, primary_key=True)
     usdrub_tod = Column(BigInteger)
