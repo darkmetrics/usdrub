@@ -24,8 +24,9 @@ class Daily(Base):
     # сырье
     brent = Column(Float)
     # urals = Column(Float)
-    gold = Column(Float)
     gas = Column(Float)
+    gold = Column(Float)
+
 
 
 class Volume(Base):

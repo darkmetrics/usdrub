@@ -30,13 +30,6 @@ volumes = pd.merge(tod['volume'], tom['volume'],
 # переименуем 'volume' в названия тикеров для объемов
 volumes.columns = fx.columns
 
-print(fx.isna().sum())
-print(volumes.isna().sum())
-print(fx)
-print(volumes)
-print(fx.info())
-print(volumes.info())
-
 # выкачаем данные из Eikon
 tr = get_eikon_data(rics=rics,
                     start_date=start_date,
@@ -49,17 +42,13 @@ daily = pd.merge(fx, tr, how='outer', left_index=True, right_index=True)
 daily.fillna(method='ffill', inplace=True)
 daily.dropna(inplace=True)
 
-print(daily)
-print(daily.info())
-print(daily.isna().sum())
-
 # подсоединимся к БД, контекстный менеджер закроет соедениние с БД автоматически
-# with Db(db_name, PSQL_USER, PSQL_PASSWORD, Base) as db:
-#     # удалим все наблюдения из всех табличек
-#     db.clear_data()
-#     # загрузим данные в таблички
-#     db.load('daily', daily)
-#     db.load('volumes', volumes)
+with Db(db_name, PSQL_USER, PSQL_PASSWORD, Base) as db:
+    # удалим все наблюдения из всех табличек
+    db.clear_data()
+    # загрузим данные в таблички
+    db.load('daily', daily)
+    db.load('volumes', volumes)
 
 # 1. get_eikon_data возвращает датафрейм, где даты - это строки, важно это учесть,
 # в том числе при загрузке в БД

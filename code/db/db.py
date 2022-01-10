@@ -36,6 +36,9 @@ class Db:
         Session = sessionmaker(bind=self.engine)
         session = Session()
         self.session = session
+        # без этой строки все ломается, потому что контекстный менеджер не
+        # возвращает объект класса
+        return self
 
     def create(self):
         """Создает БД на основе схемы"""
@@ -70,7 +73,14 @@ class Db:
             Данные должны быть уже предобработаны для загрузки в Postgres.
         """
         print(f'Загружаю данные в таблицу {name}...')
-        data.to_sql(name, self.engine)
+        # поскольку в датафрейме и в табличке в POSTGRES названия столбцов разные,
+        # переименуем столбцы в датафрейме, чтобы вставка в БД произошла
+        psql_columns = self.base.metadata.tables[name].columns.keys()
+        # в Postgres даты - столбец, в датафрейме - индекс
+        data.columns = [x for x in psql_columns if data.index.name.lower() not in x]
+        # параметр if_exists добавляет данные в уже существующую таблицу
+        # ведь мы создали таблицу в schema, и, пусть и пустая, но она все же существует
+        data.to_sql(name, self.engine, if_exists='append')
 
     def drop(self):
         """Удаляет БД, если она уже существует"""
