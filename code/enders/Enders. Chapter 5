@@ -1,0 +1,19 @@
+---
+title: "Глава 5 из книги Enders."
+output:
+  html_document:
+    df_print: paged
+---
+```{r, results='hide', message=FALSE, warning=FALSE}
+library(tidyverse)
+library(gridExtra) # Arrangning ggplots
+library(readr)     # Loading data
+library(readxl)    # Loading excel
+library(forecast)  
+library(dynlm)     # Lagged linear models
+library(urca)      # Dickey-Fuller test
+library(car)       # Linear hyphothesis testing
+library(tseries)   # adf-test
+
+setwd('D:/Users/Vladimir/Desktop/Github/usdrub/code')
+```
