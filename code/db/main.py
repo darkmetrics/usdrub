@@ -9,7 +9,7 @@ from params import EIKON_API_KEY, usdrub_tod, usdrub_tom, start_date, fx_columns
     PSQL_USER, PSQL_PASSWORD, db_name
 
 # залогинимся в терминале Eikon
-ek.set_app_key(EIKON_API_KEY)
+# ek.set_app_key(EIKON_API_KEY)
 # будем выгружать котировки вплоть до сегодняшней даты
 current_date = datetime.now()
 
@@ -31,16 +31,29 @@ volumes = pd.merge(tod['volume'], tom['volume'],
 volumes.columns = fx.columns
 
 # выкачаем данные из Eikon
-tr = get_eikon_data(rics=rics,
-                    start_date=start_date,
-                    end_date=current_date.strftime("%Y-%m-%d"),
-                    colname=ek_colname,
-                    fillna_method='ffill')
+# tr = get_eikon_data(rics=rics,
+#                     start_date=start_date,
+#                     end_date=current_date.strftime("%Y-%m-%d"),
+#                     colname=ek_colname,
+#                     fillna_method='ffill')
+
+# выгрузим доходности к погашению государственных облигаций
+# с сайта Investing.com
+
+# выгрузим исторические котировки фьючерсов на сырье и курс евро
+# с сайта Yahoo.Finance!
+
+# выгрузим курс евро
+
 # объединим все данные в единый датафрейм
 daily = pd.merge(fx, tr, how='outer', left_index=True, right_index=True)
 # разберемся с пропусками в объединенном датафрейме
-daily.fillna(method='ffill', inplace=True)
-daily.dropna(inplace=True)
+# daily.fillna(method='ffill', inplace=True)
+# daily.dropna(inplace=True)
+# не будем спешить с пропусками
+# заполним лишь пропуски для регрессоров, курс рубля трогать не будем
+# потому что в марте 2022 торгов не было,
+# но потенциально нам было бы интересно оценить пропущенные значения
 
 # подсоединимся к БД, контекстный менеджер закроет соедениние с БД автоматически
 with Db(db_name, PSQL_USER, PSQL_PASSWORD, Base) as db:

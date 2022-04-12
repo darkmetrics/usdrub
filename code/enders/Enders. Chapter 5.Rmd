@@ -1952,6 +1952,29 @@ $$
 
 Чтобы объяснить, почему уравнение, записанное в соответствии с паритетом покупательной способности, не выполняется, авторы предположили наличие двух шоков: реального и номинального. Теория говорит нам, что реальные шоки вызывают перманентные изменения курса, а номинальные - только временные. 
 
+Модель может быть записана как
+
+$$
+\begin{bmatrix}
+    \bigtriangleup r_t \\
+    \bigtriangleup e_t \\
+\end{bmatrix} = 
+\begin{bmatrix}
+    C_{11} (L) & C_{12} (L) \\
+    C_{21} (L) & C_{22} (L) \\
+\end{bmatrix}
+\begin{bmatrix}
+    \varepsilon_{rt} \\
+    \varepsilon_{et} \\
+\end{bmatrix} 
+$$
+
+И накладывается ограничение, подразумевающие отсутсвие долгосрочного кумулятивного эффекта номинальной переменной на реальную:
+
+$$
+\sum_{k=0}^{\infty} c_{12}(k) = 0
+$$
+
 ```{r}
 # загрузим данные и посмотрим на них
 fx <- read_xls('data/EXRATES.xls')
@@ -1988,36 +2011,53 @@ summary(e_adf)
 r_adf <- ur.df(r, type='none')
 summary(r_adf)
 
-X1 = embed(de,2)
-X2 = embed(e,2)
-fitted <- lm(X1[,1]~X2[-1,2]+X1[,-1]) 
-summary(fitted)
+# ряды скорее нестационарные, будем рассматривать их как I(1)
+VARselect(cbind(dr, de))
+# инфокритерии рекомендуют нам лаги 1 или 3
+VARppp = VAR(cbind(dr, de),p=3)
+summary(VARppp)
+fevd(VARppp)
 
-df1 = ur.df(dloge_ca,type="drift")
-df1@testreg
+# в R разложение Бланшара-Куа подразумевает нижнюю треугольную матрицу
+# коэффициентов 
+# а мы хотим предположить, что временные шоки e не влияют на r
+SVARbq <- BQ(VARppp)
+summary(SVARbq)
+svar_fevd <- fevd(SVARbq, n.ahead = 12)
+plot(svar_fevd)
 
-df = data.frame(r_uk=logr_ca,e_uk=loge_ca)
-VAR.PPP = VAR(df,p=3)
-summary(VAR.PPP)
-fevd(VAR.PPP)
+plot(irf(SVARbq,boot=FALSE),
+     col=1,las=1,xaxs="i",xlab="",ylab="")
 
-k = ncol(df)
-amat = diag(k)
-diag(amat) = NA
-amat[2,1] = NA
-amat
-SVAR.PPP = SVAR(VAR.PPP, estmethod = "scoring", Amat = amat, Bmat = NULL,
-                max.iter = 100, maxls = 1000, conv.crit = 1.0e-8)
-fevd(SVAR.PPP)
+irf_dr <- irf(SVARbq, impulse = "dr", boot = FALSE, n.ahead = 24)
+irf_de <- irf(SVARbq, impulse = "de", boot = FALSE, n.ahead = 24) 
 
-plot(irf(SVAR.PPP,boot=FALSE),col=1,las=1,xaxs="i",xlab="",ylab="")
+perm <- cbind(cumsum(irf_dr$irf$dr[, 1]), irf_dr$irf$dr[, 2])
+tmp <- cbind(-1 * cumsum(irf_de$irf$de[, 1]), -1 * irf_de$irf$de[, 2])
 
-BQ.PPP = BQ(VAR.PPP)
-fevd(BQ.PPP)
-plot(irf(BQ.PPP,boot=FALSE),col=1,las=1,xaxs="i",xlab="",ylab="")
 
+plot.ts(tmp[, 1], type='l',
+     col = "black", lwd = 2, ylab = "", xlab = "", 
+     main = "Nominal Shock", 
+     xlim = c(0, 25), ylim = c(-0.02, 0.02))
+
+lines(tmp[, 2], col = "blue", lwd = 2)
+abline(h = 0)
+legend(x = "topright", c("Real rate", "Nominal rate"), 
+    col = c("black", "blue"), lwd = 2, bty = "n")
+
+plot.ts(perm[, 1], col = "black", lwd = 2, ylab = "", 
+    xlab = "", main = "Real shock", xlim = c(0, 25), ylim = c(0, 
+        0.1))
+lines(perm[, 2], col = "blue", lwd = 2)
+abline(h = 0)
+legend(x = "topright", c("Real rate", "Nominal rate"), 
+    col = c("black", "blue"), lwd = 2, bty = "n")
 ```
 
+Но авторы как-то сумели получить функции импульсного отклика для шоков в уровнях, а не в разностях. У них вышло, что номинальный шок (неудивительно! не влияет на реальный обменный курс, а вот реальный шок сильно влияет и на реальный, и на номинальный обменный курс).
+
+Проблема с такой методикой - что у нас в системе будет столько шоков, сколько переменных, или меньше. 
 
 
 

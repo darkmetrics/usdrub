@@ -8,7 +8,9 @@ PSQL_PASSWORD = os.environ.get('POSTGRES_PASSWORD')
 # ВАЖНО: этот ключ связан с аккаунтом ВШЭ, логин аккаунта: student3@hse.ru
 EIKON_API_KEY = os.environ.get('EIKON_API_KEY')
 
-db_name = 'usdrub'
+# теперь у нас новая БД, с данными из бесплатных источников
+# db_name = 'usdrub'
+db_name = 'diploma'
 # переход на плавающий курс: 10-11-2014 https://tass.ru/ekonomika/1562762
 start_date = '2014-10-01'
 
@@ -29,3 +31,14 @@ fx_columns = ['TRADEDATE', 'CLOSE', 'VOLRUR']
 # и для запроса к Thomson Reuters Eikon API
 ek_colname = 'CLOSE'
 
+# в связи с прекращением работы Eikon в РФ,
+# будем использовать бесплатные некачественные данные.
+# Да здравствуют модели на никчемных данных!
+
+# названия стран и сроки до погашения облигаций
+# для загрузки YTM суверенных бондов с investing.com
+bond_dict = {'russia': [5, 10],
+             'united states': [5, 10],
+             'germany': [5, 10]}
+# курс евро и тикеры сырьевых фьючерсов для загрузки с Yahoo.Finance
+yf_tickers = ['EURUSD=X', 'BZ=F', 'GC=F', 'TTF=F']
