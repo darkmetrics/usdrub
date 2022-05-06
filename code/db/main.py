@@ -4,8 +4,9 @@ import refinitiv.dataplatform.eikon as ek
 
 from db import Db
 from schema import Base
-from dataloader import get_fx, get_eikon_data
-from params import EIKON_API_KEY, usdrub_tod, usdrub_tom, start_date, fx_columns, ek_colname, rics, \
+from dataloader import get_fx, get_bond_names, get_investing_bonds_data, get_yf_data
+from params import usdrub_tod, usdrub_tom, start_date, fx_columns, \
+    yf_tickers, bond_dict, mapping_dict, \
     PSQL_USER, PSQL_PASSWORD, db_name
 
 # залогинимся в терминале Eikon
@@ -17,7 +18,7 @@ current_date = datetime.now()
 fx_kwargs = {'start_date': start_date,
              'end_date': current_date.strftime("%Y-%m-%d"),
              'columns': fx_columns,
-             'fillna_method': 'ffill'}
+             'fillna_method': None}
 
 tod = get_fx(ticker=usdrub_tod, **fx_kwargs)
 tom = get_fx(ticker=usdrub_tom, **fx_kwargs)
@@ -29,24 +30,49 @@ volumes = pd.merge(tod['volume'], tom['volume'],
                    how='outer', left_index=True, right_index=True)
 # переименуем 'volume' в названия тикеров для объемов
 volumes.columns = fx.columns
+print(fx)
 
 # выкачаем данные из Eikon
+# с марта 2022 года это невозможно из-за санкций
 # tr = get_eikon_data(rics=rics,
 #                     start_date=start_date,
 #                     end_date=current_date.strftime("%Y-%m-%d"),
 #                     colname=ek_colname,
 #                     fillna_method='ffill')
 
+# получим коды государственных облигаций с сайта Investing.com
+bond_names = get_bond_names(bond_dict)
+# косая библиотека investpy, для одного бонда названия грузится неверно
+bond_names['germany'][5] = 'Germany 5Y'
+bond_tickers = [x for y in bond_names.values() for x in y.values()]
 # выгрузим доходности к погашению государственных облигаций
-# с сайта Investing.com
+bonds = get_investing_bonds_data(bond_tickers,
+                                 start_date=start_date,
+                                 end_date=current_date.strftime("%Y-%m-%d"),
+                                 dropna=False)
 
-# выгрузим исторические котировки фьючерсов на сырье и курс евро
+# выгрузим исторические котировки фьючерсов на сырьe, курс евро и индекс IMOEX
 # с сайта Yahoo.Finance!
-
-# выгрузим курс евро
+yf_data = get_yf_data(tickers=yf_tickers,
+                      start_date=start_date,
+                      end_date=current_date.strftime("%Y-%m-%d")
+                      )
 
 # объединим все данные в единый датафрейм
-daily = pd.merge(fx, tr, how='outer', left_index=True, right_index=True)
+daily = pd.concat((fx, bonds, yf_data),
+                  ignore_index=False,
+                  axis=1)
+# переупорядочим столбцы так, как они будут храниться в БД
+daily = daily[list(mapping_dict.values())]
+# переименуем столбцы так, как они зовутся в базе данных
+# хотя это и не обязательно
+daily.rename(columns=dict(zip(list(mapping_dict.values()),
+                              list(mapping_dict.keys()))),
+             inplace=True)
+print(daily)
+daily.index.name = 'date'
+
+# daily = pd.merge(fx, tr, how='outer', left_index=True, right_index=True)
 # разберемся с пропусками в объединенном датафрейме
 # daily.fillna(method='ffill', inplace=True)
 # daily.dropna(inplace=True)

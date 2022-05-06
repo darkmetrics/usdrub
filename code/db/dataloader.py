@@ -29,7 +29,7 @@ def get_fx(ticker: str,
            columns: list,
            boargroups: int = 13,
            format: str = 'json',
-           fillna_method: str = 'ffill'
+           fillna_method: Union[str, None] = None
            ) -> pd.DataFrame:
     """
     Скачивает историю котировок валютных курсов по IMOEX API.
@@ -91,7 +91,8 @@ def get_fx(ticker: str,
             # посчитаем объем в долларах
             df['volume'] = df['volume'].div(df[f'{short_name}'])
             # заполним пропуски
-            df.fillna(method=fillna_method, inplace=True)
+            if fillna_method:
+                df.fillna(method=fillna_method, inplace=True)
             # удалим первые несколько наблюдений, если в них пропуски
             df.dropna(inplace=True)
             return df
@@ -165,7 +166,7 @@ def get_investing_bonds_data(tickers: list,
         Дата начала набора данных для заданных тикеров.
     end_date:
         Последняя дата, на которую надо скачать историю для заданных тикеров.
-    fillna: str, default 'ffill'.
+    fillna: str, default None.
         Как заполнять пропущенные значения.
     dropna: bool, default None.
         Удалять ли строки, в которых отсутствуют все значения.
@@ -253,19 +254,24 @@ def get_yf_data(tickers: Union[str, list],
 # https://investpy.readthedocs.io/_api/bonds.html
 
 if __name__ == '__main__':
+    from params import yf_tickers
+
     out = get_bond_names(country_dict={'RUSSIA': [5, 10],
                                        'UNITED STATES': [5, 10],
                                        'GERMANY': [5, 10]})
     print(out)
+    out['germany'][5] = 'Germany 5Y'
     tickers = [x for y in out.values() for x in y.values()]
+    print(tickers)
     data = get_investing_bonds_data(tickers,
                                     start_date='2022-01-01',
-                                    end_date='2022-10-04')
+                                    end_date='2022-10-04',
+                                    dropna=False)
     print(data)
     print(data.isna().sum())
-    com_tickers = ['BZ=F', 'GC=F', 'TTF=F', 'EURUSD=X']
-    coms = get_yf_data(tickers=com_tickers,
+    coms = get_yf_data(tickers=yf_tickers,
                        start_date='2022-01-01',
                        end_date='2022-10-04'
                        )
     print(coms)
+    print(coms.isna().sum())

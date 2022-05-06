@@ -6,11 +6,11 @@ PSQL_USER = os.environ.get('POSTGRES_USER')
 PSQL_PASSWORD = os.environ.get('POSTGRES_PASSWORD')
 # получение ключа API для Eikon
 # ВАЖНО: этот ключ связан с аккаунтом ВШЭ, логин аккаунта: student3@hse.ru
-EIKON_API_KEY = os.environ.get('EIKON_API_KEY')
+# EIKON_API_KEY = os.environ.get('EIKON_API_KEY')
 
 # теперь у нас новая БД, с данными из бесплатных источников
 # db_name = 'usdrub'
-db_name = 'diploma'
+db_name = 'yahoo'
 # переход на плавающий курс: 10-11-2014 https://tass.ru/ekonomika/1562762
 start_date = '2014-10-01'
 
@@ -40,5 +40,24 @@ ek_colname = 'CLOSE'
 bond_dict = {'russia': [5, 10],
              'united states': [5, 10],
              'germany': [5, 10]}
-# курс евро и тикеры сырьевых фьючерсов для загрузки с Yahoo.Finance
-yf_tickers = ['EURUSD=X', 'BZ=F', 'GC=F', 'TTF=F']
+# курс евро, тикеры сырьевых фьючерсов (нефть, газ, золото) и IMOEX
+# для загрузки с Yahoo.Finance
+yf_tickers = ['EURUSD=X', 'BZ=F', 'TTF=F', 'GC=F', 'IMOEX.ME']
+
+# соответствие тикеров на ММВБ, Yahoo и Investing названиям столбцов в БД
+# ключи расположены именно в том порядке, в каком хранятся столбцы в таблице daily
+mapping_dict = {
+    'usdrub_tod':"USDRUBTOD",
+    'usdrub_tom':"USDRUBTOM",
+    'eurusd':'EURUSD=X',
+    'ust10':"U.S. 10Y",
+    'ger10':"Germany 10Y",
+    'ofz10':"Russia 10Y",
+    'ust5':"U.S. 5Y",
+    'ger5':"Germany 5Y",
+    'ofz5':"Russia 5Y",
+    'brent':"BZ=F",
+    'gas':"TTF=F",
+    'gold':"GC=F",
+    'imoex':"IMOEX.ME"
+}

@@ -26,6 +26,8 @@ class Daily(Base):
     # urals = Column(Float)
     gas = Column(Float)
     gold = Column(Float)
+    # российский фондовый индекс
+    imoex = Column(Float)
 
 
 
