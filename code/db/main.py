@@ -28,6 +28,7 @@ fx = pd.merge(tod.drop(columns='volume'), tom.drop(columns='volume'),
               how='outer', left_index=True, right_index=True)
 volumes = pd.merge(tod['volume'], tom['volume'],
                    how='outer', left_index=True, right_index=True)
+print(volumes)
 # переименуем 'volume' в названия тикеров для объемов
 volumes.columns = fx.columns
 print(fx)

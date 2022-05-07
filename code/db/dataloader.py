@@ -253,25 +253,3 @@ def get_yf_data(tickers: Union[str, list],
 # https://investpy.readthedocs.io/_api/commodities.html
 # https://investpy.readthedocs.io/_api/bonds.html
 
-if __name__ == '__main__':
-    from params import yf_tickers
-
-    out = get_bond_names(country_dict={'RUSSIA': [5, 10],
-                                       'UNITED STATES': [5, 10],
-                                       'GERMANY': [5, 10]})
-    print(out)
-    out['germany'][5] = 'Germany 5Y'
-    tickers = [x for y in out.values() for x in y.values()]
-    print(tickers)
-    data = get_investing_bonds_data(tickers,
-                                    start_date='2022-01-01',
-                                    end_date='2022-10-04',
-                                    dropna=False)
-    print(data)
-    print(data.isna().sum())
-    coms = get_yf_data(tickers=yf_tickers,
-                       start_date='2022-01-01',
-                       end_date='2022-10-04'
-                       )
-    print(coms)
-    print(coms.isna().sum())
