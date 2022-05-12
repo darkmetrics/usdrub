@@ -1,0 +1,11 @@
+# This CITATION.cff file was generated with cffinit.
+# Visit https://bit.ly/cffinit to generate yours today!
+
+cff-version: 1.2.0
+title: >-
+  Ruble exchange rate forecast with balance payment
+  aggregates
+message: Detailed code for the article.
+type: software
+authors:
+  - given-names: Vladimir Lozovoy
